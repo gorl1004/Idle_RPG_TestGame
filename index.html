@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>프로그래머 키우기 웹 체험판</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #0d0e14; overflow: hidden; touch-action: none; overscroll-behavior: none; }
+      body { display: flex; align-items: center; justify-content: center; font-family: 'Segoe UI', 'Noto Sans KR', sans-serif; color: #e6e6f0; }
+      #game { position: relative; }
+      #unity-canvas { display: block; background: #000; }
+      #loading { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: #0d0e14; }
+      #loading .title { font-size: 20px; font-weight: 700; }
+      #loading .hint { font-size: 12px; color: #8a8ca3; }
+      #bar { width: 60%; height: 8px; border-radius: 4px; background: #23253a; overflow: hidden; }
+      #bar-full { width: 0%; height: 100%; background: #5b8cff; transition: width .15s linear; }
+      #error { position: absolute; left: 0; right: 0; bottom: 0; padding: 10px 14px; background: #b3261e; font-size: 13px; display: none; }
+    </style>
+  </head>
+  <body>
+    <div id="game">
+      <canvas id="unity-canvas" tabindex="-1"></canvas>
+      <div id="loading">
+        <div class="title">프로그래머 키우기</div>
+        <div id="bar"><div id="bar-full"></div></div>
+        <div class="hint">웹 체험판 · 게스트로 바로 시작합니다 (진행 상황은 이 브라우저에 저장돼요)</div>
+      </div>
+      <div id="error"></div>
+    </div>
+    <script src="Build/WebGL.loader.js"></script>
+    <script>
+      var canvas = document.querySelector("#unity-canvas");
+      var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+      // 세로(9:16) 모바일 게임이라, 폰에서는 화면 전체를 쓰고(게임 UI가 안전 영역/화면비에 맞춰 배치됨)
+      // 데스크톱에서는 창 높이에 맞춘 세로 박스로 보여준다.
+      function layout() {
+        var w = window.innerWidth, h = window.innerHeight;
+        var cw = isMobile ? w : Math.min(w, Math.round(h * 9 / 16));
+        var ch = h;
+        canvas.style.width = cw + "px";
+        canvas.style.height = ch + "px";
+        document.querySelector("#game").style.width = cw + "px";
+        document.querySelector("#game").style.height = ch + "px";
+      }
+      window.addEventListener("resize", layout);
+      layout();
+
+      createUnityInstance(canvas, {
+        arguments: [],
+        dataUrl: "Build/WebGL.data.unityweb",
+        frameworkUrl: "Build/WebGL.framework.js.unityweb",
+        codeUrl: "Build/WebGL.wasm.unityweb",
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: "DefaultCompany",
+        productName: "프로그래머 키우기",
+        productVersion: "1.0",
+      }, function (progress) {
+        document.querySelector("#bar-full").style.width = (progress * 100) + "%";
+      }).then(function () {
+        document.querySelector("#loading").style.display = "none";
+      }).catch(function (message) {
+        var error = document.querySelector("#error");
+        error.style.display = "block";
+        error.textContent = "불러오지 못했어요: " + message;
+      });
+    </script>
+  </body>
+</html>
